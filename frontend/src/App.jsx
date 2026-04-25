@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-const API_BASE = 'http://localhost:8000/api/v1/';
+const API_BASE = 'http://playto-production-d2c3.up.railway.app/api/v1/';
 const MERCHANT_ID = 1;
 
 const App = () => {
