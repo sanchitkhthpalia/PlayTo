@@ -85,7 +85,7 @@ class Payout(models.Model):
     class Meta:
         unique_together = ('merchant', 'idempotency_key')
 
-    def transition_status(self, new_status):
+    def transition_status(self, new_status, reason=None):
         # Strict state machine to prevent double-spending or illegal states
         legal_transitions = {
             'pending': ['processing'],
@@ -95,6 +95,7 @@ class Payout(models.Model):
         if new_status not in legal_transitions.get(self.status, []):
             raise ValueError(f"Illegal transition from {self.status} to {new_status}")
 
+        old_status = self.status
         if new_status == 'failed':
             from django.db import transaction
             from .models import LedgerEntry
@@ -110,6 +111,27 @@ class Payout(models.Model):
         else:
             self.status = new_status
             self.save()
+        
+        # New: Audit Logging
+        PayoutAuditLog.objects.create(
+            payout=self,
+            from_status=old_status,
+            to_status=new_status,
+            reason=reason
+        )
 
     def __str__(self):
         return f"Payout {self.id} - {self.merchant.name} - {self.status}"
+
+class PayoutAuditLog(models.Model):
+    payout = models.ForeignKey(Payout, on_delete=models.CASCADE, related_name='audit_logs')
+    from_status = models.CharField(max_length=20)
+    to_status = models.CharField(max_length=20)
+    reason = models.TextField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"AuditLog {self.id} - Payout {self.payout_id}"

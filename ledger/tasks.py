@@ -12,14 +12,14 @@ def process_payout(self, payout_id):
         
         # Start processing if still pending
         if payout.status == 'pending':
-            payout.transition_status('processing')
+            payout.transition_status('processing', reason="Initiating bank transfer")
 
         # Simulate bank API latency or logic
         rand = random.random()
         if rand < 0.70:
-            payout.transition_status('completed')
+            payout.transition_status('completed', reason="Bank settled successfully")
         elif rand < 0.90:
-            payout.transition_status('failed')
+            payout.transition_status('failed', reason="Bank rejected transfer")
         else:
             # 10% chance: Bank doesn't respond or connection Drops
             # We do nothing here, the sweeper will pick it up.
@@ -48,7 +48,7 @@ def sweep_stuck_payouts():
             
             if payout.attempts >= 3:
                 # Too many tries, marking as failed to release the funds
-                payout.transition_status('failed')
+                payout.transition_status('failed', reason="Max retry attempts reached")
             else:
                 # Exponential backoff: 2, 4, 8 seconds
                 backoff = 2 ** payout.attempts
