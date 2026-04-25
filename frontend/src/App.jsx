@@ -12,6 +12,13 @@ const App = () => {
   const [amount, setAmount] = useState('');
   const [bankAccount, setBankAccount] = useState('');
   const [loading, setLoading] = useState(false);
+  const [notification, setNotification] = useState(null); // { message, type: 'success' | 'error' }
+
+  // Show a toast and auto-hide it
+  const showToast = (message, type = 'success') => {
+    setNotification({ message, type });
+    setTimeout(() => setNotification(null), 4000);
+  };
 
   useEffect(() => {
     const fetchBalance = async () => {
@@ -85,13 +92,17 @@ const App = () => {
       if (res.ok) {
         setAmount('');
         setBankAccount('');
+        showToast('Payout requested successfully!', 'success');
+        fetchBalance();
         fetchPayouts();
+        fetchTransactions();
       } else {
         const error = await res.json();
-        alert(error.error || "Payout failed");
+        showToast(error.error || "Payout failed", 'error');
       }
     } catch (err) {
-      alert("Network error");
+      console.error(err);
+      showToast(err.message, 'error');
     } finally {
       setLoading(false);
     }
@@ -197,6 +208,21 @@ const App = () => {
           </div>
         </section>
       </div>
+      {/* Toast Notifications */}
+      {notification && (
+        <div className={`fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-2xl text-white transform transition-all duration-300 animate-bounce ${
+          notification.type === 'success' ? 'bg-emerald-500' : 'bg-rose-500'
+        }`}>
+          <div className="flex items-center space-x-3 text-sm font-medium">
+            {notification.type === 'success' ? (
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
+            ) : (
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            )}
+            <span>{notification.message}</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
