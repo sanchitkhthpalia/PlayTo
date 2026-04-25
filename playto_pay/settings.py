@@ -53,6 +53,10 @@ MIDDLEWARE = [
 
 CORS_ALLOW_ALL_ORIGINS = True 
 CORS_ALLOW_CREDENTIALS = True
+CSRF_TRUSTED_ORIGINS = [
+    "https://play-to.vercel.app",
+    "http://localhost:5173"
+]
 
 
 ROOT_URLCONF = "playto_pay.urls"
