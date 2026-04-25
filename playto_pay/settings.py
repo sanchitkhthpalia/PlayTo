@@ -79,12 +79,22 @@ WSGI_APPLICATION = "playto_pay.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-DATABASES = {
-    'default': dj_database_url.config(
-        default='postgresql://neondb_owner:npg_n4UMHrweRY7N@ep-morning-forest-a4d2sj7q-pooler.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require',
-        conn_max_age=600
-    )
-}
+import sys
+if 'test' in sys.argv or 'test_coverage' in sys.argv:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': ':memory:',
+        }
+    }
+else:
+    DATABASES = {
+        'default': dj_database_url.config(
+            default='postgresql://neondb_owner:npg_n4UMHrweRY7N@ep-morning-forest-a4d2sj7q-pooler.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require',
+            conn_max_age=600
+        )
+    }
+
 
 
 # Password validation

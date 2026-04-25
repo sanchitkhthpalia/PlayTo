@@ -5,10 +5,10 @@ class Command(BaseCommand):
     help = "Seeds initial data for testing"
 
     def handle(self, *args, **options):
-        # Wipe to start clean
-        Payout.objects.all().delete()
-        LedgerEntry.objects.all().delete()
-        Merchant.objects.all().delete()
+        # Wipe and Reset Sequences (Postgres specific)
+        from django.db import connection
+        with connection.cursor() as cursor:
+            cursor.execute("TRUNCATE TABLE ledger_payout, ledger_ledgerentry, ledger_merchant RESTART IDENTITY CASCADE;")
 
         # Merchant A
         m_a = Merchant.objects.create(name="Merchant A")
