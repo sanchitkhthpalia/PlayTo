@@ -9,23 +9,20 @@ https://docs.djangoproject.com/en/6.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
-import dj_database_url
+import os
 from pathlib import Path
+import dj_database_url
+from dotenv import load_dotenv
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+# Load local .env file
+load_dotenv()
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-_f9n^%v4o)z2=#5uq_v=x_%41zdi-9#c)d%6k6l*#c8*_(5(1y"
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = []
+# Pull from environment variables
+SECRET_KEY = os.getenv("SECRET_KEY", "django-insecure-fallback-key")
+DEBUG = os.getenv("DEBUG", "True") == "True"
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "*").split(",")
 
 
 # Application definition
@@ -76,9 +73,7 @@ TEMPLATES = [
 WSGI_APPLICATION = "playto_pay.wsgi.application"
 
 
-# Database
-# https://docs.djangoproject.com/en/6.0/ref/settings/#databases
-
+# Database configuration with Test fallback
 import sys
 if 'test' in sys.argv or 'test_coverage' in sys.argv:
     DATABASES = {
@@ -88,9 +83,10 @@ if 'test' in sys.argv or 'test_coverage' in sys.argv:
         }
     }
 else:
+    # Uses DATABASE_URL from .env or deployment platform
     DATABASES = {
         'default': dj_database_url.config(
-            default='postgresql://neondb_owner:npg_n4UMHrweRY7N@ep-morning-forest-a4d2sj7q-pooler.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require',
+            default=os.getenv('DATABASE_URL'),
             conn_max_age=600
         )
     }
@@ -140,8 +136,8 @@ CORS_ALLOW_HEADERS = list(default_headers) + [
 ]
 
 # Celery Configuration
-CELERY_BROKER_URL = 'redis://localhost:6379/0'
-CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://localhost:6379/0')
+CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', CELERY_BROKER_URL)
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
